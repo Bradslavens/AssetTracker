@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0C0F14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Net Worth">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <title>Net Worth</title>
+
+  <style>
+    /* ── Palette — tweak these ─────────────────────────────────────────── */
+    :root {
+      --ink: #0C0F14;
+      --ink-soft: #141820;
+      --text: #E8E4DC;
+      --text-dim: #8A8680;
+      --gold: #C9A962;
+      --green: #5CB87A;
+      --red: #D4655A;
+      --track: #2A2E38;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+      background: var(--ink);
+      color: var(--text);
+      /* System stack — SF Pro on iOS, no downloads */
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+        system-ui, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.4;
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      background: var(--ink);
+      padding:
+        calc(1.5rem + var(--safe-top))
+        calc(1.25rem + var(--safe-right))
+        calc(1.5rem + var(--safe-bottom))
+        calc(1.25rem + var(--safe-left));
+    }
+
+    /* ── Layout ────────────────────────────────────────────────────────── */
+    .screen {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      animation: fadeIn 0.45s ease;
+    }
+    .screen.active { display: flex; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .screen { animation: none; }
+      .track-dot { transition: none !important; }
+      .delta-value { transition: none !important; }
+    }
+
+    .question {
+      font-size: 1.125rem;
+      font-weight: 400;
+      color: var(--text-dim);
+      letter-spacing: 0.01em;
+      margin-bottom: 2rem;
+      max-width: 20rem;
+    }
+
+    .input-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: stretch;
+      gap: 1.5rem;
+      max-width: 100%;
+    }
+
+    /* Large money input */
+    .input-large {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--track);
+      color: var(--text);
+      font: inherit;
+      font-size: clamp(2.5rem, 12vw, 3.75rem);
+      font-weight: 200;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+      padding: 0.25rem 0 0.75rem;
+      outline: none;
+      caret-color: var(--gold);
+    }
+    .input-large::placeholder { color: var(--text-dim); opacity: 0.5; }
+    .input-large:focus { border-bottom-color: var(--gold); }
+
+    .input-small-label {
+      font-size: 0.875rem;
+      color: var(--text-dim);
+      margin-top: 1rem;
+    }
+
+    .input-small {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--track);
+      color: var(--text);
+      font: inherit;
+      font-size: 1.5rem;
+      font-weight: 300;
+      font-variant-numeric: tabular-nums;
+      padding: 0.25rem 0 0.5rem;
+      outline: none;
+      caret-color: var(--gold);
+    }
+    .input-small::placeholder { color: var(--text-dim); opacity: 0.4; }
+    .input-small:focus { border-bottom-color: var(--gold); }
+
+    .error {
+      font-size: 0.8125rem;
+      color: var(--red);
+      min-height: 1.25rem;
+      margin-top: -0.75rem;
+    }
+
+    /* ── Buttons ───────────────────────────────────────────────────────── */
+    .btn-primary {
+      width: 100%;
+      margin-top: auto;
+      padding: 1rem 1.5rem;
+      background: var(--text);
+      color: var(--ink);
+      border: none;
+      border-radius: 2px;
+      font: inherit;
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-primary:active { opacity: 0.85; }
+    .btn-primary:disabled { opacity: 0.35; cursor: default; }
+
+    .btn-ghost {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font: inherit;
+      font-size: 0.8125rem;
+      cursor: pointer;
+      padding: 0.5rem;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-ghost:active { color: var(--text); }
+
+    .footer-link {
+      text-align: center;
+      margin-top: 1.5rem;
+    }
+
+    /* ── Result screen ─────────────────────────────────────────────────── */
+    .figures {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .figure-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      margin-bottom: 0.35rem;
+    }
+
+    .figure-value {
+      font-size: clamp(1.25rem, 5vw, 1.5rem);
+      font-weight: 300;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .figure-value.goal { color: var(--gold); }
+
+    .delta-block {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .delta-value {
+      font-size: clamp(2.25rem, 11vw, 3.5rem);
+      font-weight: 200;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+    .delta-value.ahead { color: var(--green); }
+    .delta-value.behind { color: var(--red); }
+    .delta-value.even { color: var(--text-dim); }
+
+    /* Progress track */
+    .track-wrap {
+      margin-bottom: 2.5rem;
+      padding: 0 0.25rem;
+    }
+
+    .track {
+      position: relative;
+      height: 2px;
+      background: var(--track);
+      border-radius: 1px;
+      margin: 1.75rem 0;
+    }
+
+    .track-tick {
+      position: absolute;
+      top: 50%;
+      width: 2px;
+      height: 14px;
+      background: var(--gold);
+      transform: translate(-50%, -50%);
+      border-radius: 1px;
+    }
+
+    .track-dot {
+      position: absolute;
+      top: 50%;
+      width: 10px;
+      height: 10px;
+      background: var(--text);
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      transition: left 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+                  transform 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.15s;
+    }
+    .track-dot.visible {
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .track-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.6875rem;
+      color: var(--text-dim);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* History */
+    .history-title {
+      font-size: 0.6875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      margin-bottom: 0.75rem;
+    }
+
+    .history-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-height: 28vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 0.8125rem;
+      font-variant-numeric: tabular-nums;
+      padding: 0.35rem 0;
+      border-bottom: 1px solid rgba(42, 46, 56, 0.6);
+    }
+
+    .history-date { color: var(--text-dim); }
+    .history-delta.ahead { color: var(--green); }
+    .history-delta.behind { color: var(--red); }
+    .history-delta.even { color: var(--text-dim); }
+
+    .result-actions {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    /* ── Settings ────────────────────────────────────────────────────── */
+    .settings-group {
+      margin-bottom: 2rem;
+    }
+
+    .settings-label {
+      font-size: 0.875rem;
+      color: var(--text-dim);
+      margin-bottom: 0.75rem;
+    }
+
+    .input-percent {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--track);
+      color: var(--text);
+      font: inherit;
+      font-size: 2rem;
+      font-weight: 300;
+      font-variant-numeric: tabular-nums;
+      padding: 0.25rem 0 0.5rem;
+      outline: none;
+      caret-color: var(--gold);
+    }
+    .input-percent:focus { border-bottom-color: var(--gold); }
+
+    .btn-danger {
+      width: 100%;
+      padding: 0.875rem;
+      background: transparent;
+      border: 1px solid var(--red);
+      color: var(--red);
+      border-radius: 2px;
+      font: inherit;
+      font-size: 0.875rem;
+      cursor: pointer;
+      margin-top: 2rem;
+    }
+    .btn-danger:active { background: rgba(212, 101, 90, 0.1); }
+
+    .settings-back {
+      margin-top: auto;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Setup: initial value ──────────────────────────────────────────── -->
+  <section id="screen-setup-a" class="screen active" aria-label="Initial setup">
+    <p class="question">What's your asset value today?</p>
+    <div class="input-wrap">
+      <input
+        type="text"
+        id="input-initial-value"
+        class="input-large"
+        inputmode="decimal"
+        autocomplete="off"
+        autocorrect="off"
+        spellcheck="false"
+        placeholder="$0"
+        aria-label="Asset value"
+      >
+      <p class="error" id="error-setup-a" role="alert"></p>
+    </div>
+    <button type="button" class="btn-primary" id="btn-setup-a">Continue</button>
+  </section>
+
+  <!-- ── Setup: growth rate ────────────────────────────────────────────── -->
+  <section id="screen-setup-b" class="screen" aria-label="Growth goal">
+    <p class="question">What's your growth goal per year?</p>
+    <div class="input-wrap">
+      <input
+        type="text"
+        id="input-growth-rate"
+        class="input-large"
+        inputmode="decimal"
+        autocomplete="off"
+        autocorrect="off"
+        spellcheck="false"
+        placeholder="8%"
+        aria-label="Annual growth rate"
+      >
+      <p class="error" id="error-setup-b" role="alert"></p>
+    </div>
+    <button type="button" class="btn-primary" id="btn-start">Start</button>
+  </section>
+
+  <!-- ── Check-in ──────────────────────────────────────────────────────── -->
+  <section id="screen-checkin" class="screen" aria-label="Check-in">
+    <p class="question">What's your value today?</p>
+    <div class="input-wrap">
+      <input
+        type="text"
+        id="input-checkin-value"
+        class="input-large"
+        inputmode="decimal"
+        autocomplete="off"
+        autocorrect="off"
+        spellcheck="false"
+        placeholder="$0"
+        aria-label="Current value"
+      >
+      <p class="input-small-label">New contributions since last time?</p>
+      <input
+        type="text"
+        id="input-contribution"
+        class="input-small"
+        inputmode="decimal"
+        autocomplete="off"
+        autocorrect="off"
+        spellcheck="false"
+        placeholder="Optional"
+        aria-label="Contributions since last check-in"
+      >
+      <p class="error" id="error-checkin" role="alert"></p>
+    </div>
+    <button type="button" class="btn-primary" id="btn-checkin">Submit</button>
+    <div class="footer-link">
+      <button type="button" class="btn-ghost" id="link-settings-checkin">Settings</button>
+    </div>
+  </section>
+
+  <!-- ── Result ────────────────────────────────────────────────────────── -->
+  <section id="screen-result" class="screen" aria-label="Result">
+    <div class="figures">
+      <div>
+        <p class="figure-label">Goal</p>
+        <p class="figure-value goal" id="result-goal">—</p>
+      </div>
+      <div>
+        <p class="figure-label">Actual</p>
+        <p class="figure-value" id="result-actual">—</p>
+      </div>
+    </div>
+
+    <div class="delta-block">
+      <p class="delta-value" id="result-delta">—</p>
+    </div>
+
+    <div class="track-wrap" aria-hidden="true">
+      <div class="track" id="track">
+        <div class="track-tick" id="track-tick"></div>
+        <div class="track-dot" id="track-dot"></div>
+      </div>
+      <div class="track-labels">
+        <span>Behind</span>
+        <span>Ahead</span>
+      </div>
+    </div>
+
+    <p class="history-title">History</p>
+    <ul class="history-list" id="history-list"></ul>
+
+    <div class="result-actions">
+      <button type="button" class="btn-primary" id="btn-done">Done</button>
+      <button type="button" class="btn-ghost" id="link-settings-result">Settings</button>
+    </div>
+  </section>
+
+  <!-- ── Settings ──────────────────────────────────────────────────────── -->
+  <section id="screen-settings" class="screen" aria-label="Settings">
+    <p class="question">Settings</p>
+
+    <div class="settings-group">
+      <p class="settings-label">Annual growth goal</p>
+      <input
+        type="text"
+        id="input-settings-rate"
+        class="input-percent"
+        inputmode="decimal"
+        autocomplete="off"
+        autocorrect="off"
+        spellcheck="false"
+        aria-label="Growth rate"
+      >
+      <p class="error" id="error-settings" role="alert"></p>
+    </div>
+
+    <button type="button" class="btn-primary" id="btn-save-settings">Save</button>
+    <button type="button" class="btn-danger" id="btn-reset">Reset everything</button>
+
+    <div class="settings-back">
+      <button type="button" class="btn-ghost" id="btn-settings-back">Back</button>
+    </div>
+  </section>
+
+  <script>
+    /* ══════════════════════════════════════════════════════════════════════
+       CONFIG — bump SW version in sw.js when you ship asset changes
+       ══════════════════════════════════════════════════════════════════════ */
+    const STORAGE_KEY = 'networthTracker';
+    const MS_PER_YEAR = 365.25 * 24 * 60 * 60 * 1000;
+
+    const usd = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+    });
+
+    const dateFmt = new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+
+    /* ── Data layer ────────────────────────────────────────────────────── */
+
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch {
+        return null;
+      }
+    }
+
+    function saveData(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function isSetupComplete(data) {
+      return (
+        data &&
+        typeof data.growthRate === 'number' &&
+        Array.isArray(data.principalEvents) &&
+        data.principalEvents.length > 0
+      );
+    }
+
+    function getLastCheckIn(data) {
+      if (!data.checkIns || !data.checkIns.length) return null;
+      return data.checkIns.reduce((latest, ci) =>
+        ci.timestamp > latest.timestamp ? ci : latest
+      );
+    }
+
+    /* Goal = Σ amount × (1 + rate)^elapsedYears for each principal event */
+    function calcGoal(principalEvents, rate, atTimestamp) {
+      return principalEvents.reduce((sum, ev) => {
+        const years = (atTimestamp - ev.timestamp) / MS_PER_YEAR;
+        return sum + ev.amount * Math.pow(1 + rate, years);
+      }, 0);
+    }
+
+    function eventsAtTime(data, timestamp) {
+      return data.principalEvents.filter((e) => e.timestamp <= timestamp);
+    }
+
+    function calcDelta(checkIn, data) {
+      const goal = calcGoal(
+        eventsAtTime(data, checkIn.timestamp),
+        data.growthRate,
+        checkIn.timestamp
+      );
+      return checkIn.value - goal;
+    }
+
+    /* Rebuild principal events from check-ins (contributions add events) */
+    function addContributionEvent(data, amount, timestamp) {
+      if (amount !== 0 && !isNaN(amount)) {
+        data.principalEvents.push({ timestamp, amount });
+      }
+    }
+
+    /* ── Input parsing ─────────────────────────────────────────────────── */
+
+    function parseMoney(str) {
+      if (str == null || String(str).trim() === '') return NaN;
+      const cleaned = String(str)
+        .trim()
+        .replace(/\$/g, '')
+        .replace(/\u00A0/g, ' ')
+        .replace(/\s/g, '');
+
+      if (cleaned === '' || cleaned === '-') return NaN;
+
+      /* US-style 1,234,567.89 — commas are thousands separators */
+      if (/^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(cleaned)) {
+        const n = parseFloat(cleaned.replace(/,/g, ''));
+        return isNaN(n) ? NaN : n;
+      }
+
+      /* 1.234.567,89 or 1234,56 — periods thousands, comma decimal */
+      if (/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(cleaned)) {
+        const n = parseFloat(cleaned.replace(/\./g, '').replace(',', '.'));
+        return isNaN(n) ? NaN : n;
+      }
+
+      /* Plain number, optional single decimal separator */
+      const normalized = cleaned.replace(/,/g, '');
+      const n = parseFloat(normalized);
+      return isNaN(n) ? NaN : n;
+    }
+
+    function parseOptionalMoney(str) {
+      if (str == null || String(str).trim() === '') return 0;
+      return parseMoney(str);
+    }
+
+    function isMoneyEmpty(str) {
+      return str == null || String(str).trim() === '';
+    }
+
+    function parsePercent(str) {
+      if (str == null || String(str).trim() === '') return NaN;
+      const cleaned = String(str).replace(/[%\s,]/g, '');
+      const n = parseFloat(cleaned);
+      if (isNaN(n)) return NaN;
+      return n / 100;
+    }
+
+    function formatPercent(rate) {
+      return (rate * 100).toFixed(1).replace(/\.0$/, '') + '%';
+    }
+
+    /* ── UI helpers ────────────────────────────────────────────────────── */
+
+    const screens = {
+      'setup-a': document.getElementById('screen-setup-a'),
+      'setup-b': document.getElementById('screen-setup-b'),
+      checkin: document.getElementById('screen-checkin'),
+      result: document.getElementById('screen-result'),
+      settings: document.getElementById('screen-settings'),
+    };
+
+    let returnScreen = 'checkin';
+    let pendingInitialValue = null;
+
+    function showScreen(name) {
+      Object.values(screens).forEach((el) => el.classList.remove('active'));
+      screens[name].classList.add('active');
+    }
+
+    function clearErrors() {
+      document.querySelectorAll('.error').forEach((el) => (el.textContent = ''));
+    }
+
+    function prefersReducedMotion() {
+      return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+
+    /* Count-up animation for delta display */
+    function animateDelta(el, targetDelta, duration) {
+      const reduced = prefersReducedMotion();
+      const abs = Math.abs(targetDelta);
+      const cls = targetDelta > 0 ? 'ahead' : targetDelta < 0 ? 'behind' : 'even';
+
+      el.className = 'delta-value ' + cls;
+
+      if (reduced || abs < 1) {
+        el.textContent = formatDelta(targetDelta);
+        return;
+      }
+
+      const start = performance.now();
+      function tick(now) {
+        const t = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - t, 3);
+        const current = Math.round(targetDelta * eased);
+        el.textContent = formatDelta(current);
+        if (t < 1) requestAnimationFrame(tick);
+        else el.textContent = formatDelta(targetDelta);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    function formatDelta(delta) {
+      const abs = Math.abs(Math.round(delta));
+      if (abs < 1) return 'On target';
+      const formatted = usd.format(abs);
+      if (delta > 0) return '+' + formatted + ' ahead';
+      return '−' + formatted + ' behind';
+    }
+
+    function formatHistoryDelta(delta) {
+      const abs = Math.abs(Math.round(delta));
+      if (abs < 1) return 'On target';
+      const formatted = usd.format(abs);
+      if (delta > 0) return '+' + formatted;
+      return '−' + formatted;
+    }
+
+    /* ── Result rendering ──────────────────────────────────────────────── */
+
+    function renderResult(data, checkIn) {
+      const goal = calcGoal(
+        eventsAtTime(data, checkIn.timestamp),
+        data.growthRate,
+        checkIn.timestamp
+      );
+      const actual = checkIn.value;
+      const delta = actual - goal;
+
+      document.getElementById('result-goal').textContent = usd.format(Math.round(goal));
+      document.getElementById('result-actual').textContent = usd.format(Math.round(actual));
+
+      const deltaEl = document.getElementById('result-delta');
+      animateDelta(deltaEl, delta, 900);
+
+      /* Track: goal tick at center, dot offset by delta relative to span */
+      const tick = document.getElementById('track-tick');
+      const dot = document.getElementById('track-dot');
+      tick.style.left = '50%';
+
+      const span = Math.max(Math.abs(delta), goal * 0.05, 1000);
+      const offset = Math.max(-0.45, Math.min(0.45, (delta / span) * 0.45));
+      const dotLeft = 50 + offset * 100;
+
+      dot.classList.remove('visible');
+      dot.style.left = '50%';
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          dot.style.left = dotLeft + '%';
+          dot.classList.add('visible');
+        });
+      });
+
+      /* History — newest first, skip rendering future-proof */
+      const list = document.getElementById('history-list');
+      list.innerHTML = '';
+      const sorted = [...data.checkIns].sort((a, b) => b.timestamp - a.timestamp);
+
+      sorted.forEach((ci) => {
+        const d = calcDelta(ci, data);
+        const li = document.createElement('li');
+        li.className = 'history-item';
+
+        const dateSpan = document.createElement('span');
+        dateSpan.className = 'history-date';
+        dateSpan.textContent = dateFmt.format(new Date(ci.timestamp));
+
+        const deltaSpan = document.createElement('span');
+        const dCls = d > 0 ? 'ahead' : d < 0 ? 'behind' : 'even';
+        deltaSpan.className = 'history-delta ' + dCls;
+        deltaSpan.textContent = formatHistoryDelta(d);
+
+        li.appendChild(dateSpan);
+        li.appendChild(deltaSpan);
+        list.appendChild(li);
+      });
+    }
+
+    /* ── Navigation / flows ────────────────────────────────────────────── */
+
+    function launch() {
+      const data = loadData();
+      if (isSetupComplete(data)) {
+        showScreen('checkin');
+        document.getElementById('input-checkin-value').focus();
+      } else {
+        showScreen('setup-a');
+        document.getElementById('input-initial-value').focus();
+      }
+    }
+
+    /* Setup A → B */
+    document.getElementById('btn-setup-a').addEventListener('click', () => {
+      clearErrors();
+      const val = parseMoney(document.getElementById('input-initial-value').value);
+      if (isNaN(val) || val < 0) {
+        document.getElementById('error-setup-a').textContent =
+          'Enter a valid dollar amount.';
+        return;
+      }
+      pendingInitialValue = val;
+      showScreen('setup-b');
+      document.getElementById('input-growth-rate').focus();
+    });
+
+    /* Setup B → Start (first check-in) */
+    document.getElementById('btn-start').addEventListener('click', () => {
+      clearErrors();
+      const rate = parsePercent(document.getElementById('input-growth-rate').value);
+      if (isNaN(rate) || rate < 0) {
+        document.getElementById('error-setup-b').textContent =
+          'Enter a valid percentage (e.g. 8).';
+        return;
+      }
+
+      const now = Date.now();
+      const data = {
+        growthRate: rate,
+        principalEvents: [{ timestamp: now, amount: pendingInitialValue }],
+        checkIns: [],
+      };
+
+      const checkIn = { timestamp: now, value: pendingInitialValue, contribution: 0 };
+      data.checkIns.push(checkIn);
+      saveData(data);
+      pendingInitialValue = null;
+
+      renderResult(data, checkIn);
+      showScreen('result');
+    });
+
+    /* Check-in submit */
+    document.getElementById('btn-checkin').addEventListener('click', () => {
+      clearErrors();
+      const valueInput = document.getElementById('input-checkin-value');
+      const contributionInput = document.getElementById('input-contribution');
+      const valueRaw = valueInput.value;
+      const contributionRaw = contributionInput.value;
+
+      if (!isMoneyEmpty(contributionRaw) && isNaN(parseMoney(contributionRaw))) {
+        document.getElementById('error-checkin').textContent =
+          'Enter a valid contribution amount (or leave blank).';
+        contributionInput.focus();
+        return;
+      }
+
+      const contribution = parseOptionalMoney(contributionRaw);
+
+      const data = loadData();
+      if (!isSetupComplete(data)) {
+        launch();
+        return;
+      }
+
+      let value;
+      if (isMoneyEmpty(valueRaw)) {
+        /* Contribution-only check-in: infer total from last snapshot + flow */
+        if (contribution === 0) {
+          document.getElementById('error-checkin').textContent =
+            'Enter your total value today.';
+          valueInput.focus();
+          return;
+        }
+        const last = getLastCheckIn(data);
+        if (!last) {
+          document.getElementById('error-checkin').textContent =
+            'Enter your total value today.';
+          valueInput.focus();
+          return;
+        }
+        value = last.value + contribution;
+      } else {
+        value = parseMoney(valueRaw);
+        if (isNaN(value)) {
+          document.getElementById('error-checkin').textContent =
+            'Enter a valid total value.';
+          valueInput.focus();
+          return;
+        }
+      }
+
+      if (value < 0) {
+        document.getElementById('error-checkin').textContent =
+          'Total value cannot be negative.';
+        valueInput.focus();
+        return;
+      }
+
+      const now = Date.now();
+      addContributionEvent(data, contribution, now);
+
+      const checkIn = { timestamp: now, value, contribution };
+      data.checkIns.push(checkIn);
+      saveData(data);
+
+      document.getElementById('input-checkin-value').value = '';
+      document.getElementById('input-contribution').value = '';
+
+      renderResult(data, checkIn);
+      showScreen('result');
+    });
+
+    /* Done → back to check-in */
+    document.getElementById('btn-done').addEventListener('click', () => {
+      showScreen('checkin');
+      document.getElementById('input-checkin-value').focus();
+    });
+
+    /* Settings */
+    function openSettings(from) {
+      returnScreen = from;
+      const data = loadData();
+      if (data) {
+        document.getElementById('input-settings-rate').value = formatPercent(data.growthRate);
+      }
+      clearErrors();
+      showScreen('settings');
+    }
+
+    document.getElementById('link-settings-checkin').addEventListener('click', () => {
+      openSettings('checkin');
+    });
+    document.getElementById('link-settings-result').addEventListener('click', () => {
+      openSettings('result');
+    });
+
+    document.getElementById('btn-settings-back').addEventListener('click', () => {
+      showScreen(returnScreen);
+    });
+
+    document.getElementById('btn-save-settings').addEventListener('click', () => {
+      clearErrors();
+      const rate = parsePercent(document.getElementById('input-settings-rate').value);
+      if (isNaN(rate) || rate < 0) {
+        document.getElementById('error-settings').textContent =
+          'Enter a valid percentage.';
+        return;
+      }
+      const data = loadData();
+      if (data) {
+        data.growthRate = rate;
+        saveData(data);
+      }
+      showScreen(returnScreen);
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      if (confirm('Reset everything? All history will be permanently deleted.')) {
+        localStorage.removeItem(STORAGE_KEY);
+        pendingInitialValue = null;
+        showScreen('setup-a');
+        document.getElementById('input-initial-value').value = '';
+        document.getElementById('input-growth-rate').value = '';
+        document.getElementById('input-initial-value').focus();
+      }
+    });
+
+    /* Enter key submits on input screens */
+    document.getElementById('input-initial-value').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('btn-setup-a').click();
+    });
+    document.getElementById('input-growth-rate').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('btn-start').click();
+    });
+    document.getElementById('input-checkin-value').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('btn-checkin').click();
+    });
+    document.getElementById('input-contribution').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('btn-checkin').click();
+    });
+
+    /* ── Service worker ──────────────────────────────────────────────────── */
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+
+    launch();
+  </script>
+</body>
+</html>
