@@ -1,0 +1,10 @@
+{
+  "name": "networth-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Private, offline net worth tracker PWA",
+  "scripts": {
+    "test": "node --test \"test/**/*.test.js\"",
+    "serve": "python3 -m http.server 8080"
+  }
+}

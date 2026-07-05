@@ -1,10 +1,11 @@
 /* Bump CACHE_VERSION when you change any asset so clients pick up updates. */
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const CACHE_NAME = 'networth-' + CACHE_VERSION;
 
 const ASSETS = [
   './',
   './index.html',
+  './logic.js',
   './manifest.json',
   './sw.js',
   './apple-touch-icon.png',

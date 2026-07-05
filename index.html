@@ -3,42 +3,47 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0C0F14">
+  <meta name="theme-color" content="#FAF7F1">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Net Worth">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icon-192.png">
   <title>Net Worth</title>
 
   <style>
-    /* ── Palette — tweak these ─────────────────────────────────────────── */
+    /* ── The Ledger — bright paper, editorial serif, forest-green ink ──── */
     :root {
-      --ink: #0C0F14;
-      --ink-soft: #141820;
-      --text: #E8E4DC;
-      --text-dim: #8A8680;
-      --gold: #C9A962;
-      --green: #5CB87A;
-      --red: #D4655A;
-      --track: #2A2E38;
+      --paper: #FAF7F1;
+      --paper-deep: #F3EEE4;
+      --ink: #22322A;
+      --ink-dim: #8B857A;
+      --hairline: #E2DCCF;
+      --green: #1D6B4C;
+      --green-deep: #14523A;
+      --gold: #B08A3E;
+      --ahead: #1D7A4F;
+      --behind: #BC4A2E;
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
       --safe-left: env(safe-area-inset-left, 0px);
       --safe-right: env(safe-area-inset-right, 0px);
+      --serif: ui-serif, "New York", Georgia, "Times New Roman", serif;
+      --sans: -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI",
+        Roboto, "Helvetica Neue", sans-serif;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     html {
       -webkit-text-size-adjust: 100%;
-      background: var(--ink);
-      color: var(--text);
-      /* System stack — SF Pro on iOS, no downloads */
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
-        system-ui, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--sans);
       font-variant-numeric: tabular-nums;
-      line-height: 1.4;
+      line-height: 1.45;
       min-height: 100%;
     }
 
@@ -46,12 +51,15 @@
       min-height: 100dvh;
       display: flex;
       flex-direction: column;
-      background: var(--ink);
+      /* Soft wash of light from the top — paper under a lamp */
+      background:
+        radial-gradient(120% 55% at 50% 0%, #FFFDF8 0%, var(--paper) 70%),
+        var(--paper);
       padding:
-        calc(1.5rem + var(--safe-top))
-        calc(1.25rem + var(--safe-right))
+        calc(1.25rem + var(--safe-top))
+        calc(1.5rem + var(--safe-right))
         calc(1.5rem + var(--safe-bottom))
-        calc(1.25rem + var(--safe-left));
+        calc(1.5rem + var(--safe-left));
     }
 
     /* ── Layout ────────────────────────────────────────────────────────── */
@@ -59,28 +67,54 @@
       display: none;
       flex: 1;
       flex-direction: column;
-      animation: fadeIn 0.45s ease;
+      max-width: 26rem;
+      width: 100%;
+      margin: 0 auto;
+      animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .screen.active { display: flex; }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(10px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
     @media (prefers-reduced-motion: reduce) {
       .screen { animation: none; }
       .track-dot { transition: none !important; }
-      .delta-value { transition: none !important; }
+    }
+
+    /* Masthead — small-caps wordmark over a hairline, like a journal */
+    .masthead {
+      text-align: center;
+      padding-bottom: 0.875rem;
+      margin-bottom: 2.25rem;
+      border-bottom: 1px solid var(--hairline);
+      font-size: 0.6875rem;
+      font-weight: 600;
+      letter-spacing: 0.32em;
+      text-indent: 0.32em; /* balance the letterspacing */
+      text-transform: uppercase;
+      color: var(--green);
+      user-select: none;
     }
 
     .question {
-      font-size: 1.125rem;
-      font-weight: 400;
-      color: var(--text-dim);
-      letter-spacing: 0.01em;
-      margin-bottom: 2rem;
-      max-width: 20rem;
+      font-family: var(--serif);
+      font-size: 1.75rem;
+      font-weight: 500;
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+      margin-bottom: 0.75rem;
+      max-width: 18rem;
+    }
+
+    .hint {
+      font-size: 0.875rem;
+      color: var(--ink-dim);
+      margin-bottom: 1.5rem;
+      max-width: 19rem;
     }
 
     .input-wrap {
@@ -89,115 +123,158 @@
       flex-direction: column;
       justify-content: center;
       align-items: stretch;
-      gap: 1.5rem;
+      gap: 1.25rem;
       max-width: 100%;
     }
 
-    /* Large money input */
+    /* Large money input — serif ledger numerals */
     .input-large {
       width: 100%;
       background: transparent;
       border: none;
-      border-bottom: 1px solid var(--track);
-      color: var(--text);
-      font: inherit;
-      font-size: clamp(2.5rem, 12vw, 3.75rem);
-      font-weight: 200;
+      border-bottom: 1.5px solid var(--hairline);
+      color: var(--ink);
+      font-family: var(--serif);
+      font-size: clamp(2.5rem, 12vw, 3.5rem);
+      font-weight: 500;
       font-variant-numeric: tabular-nums;
-      letter-spacing: -0.02em;
-      padding: 0.25rem 0 0.75rem;
+      letter-spacing: -0.01em;
+      padding: 0.25rem 0 0.625rem;
       outline: none;
-      caret-color: var(--gold);
+      caret-color: var(--green);
+      border-radius: 0;
+      transition: border-color 0.25s ease;
     }
-    .input-large::placeholder { color: var(--text-dim); opacity: 0.5; }
-    .input-large:focus { border-bottom-color: var(--gold); }
+    .input-large::placeholder { color: var(--ink-dim); opacity: 0.45; }
+    .input-large:focus { border-bottom-color: var(--green); }
 
     .input-small-label {
-      font-size: 0.875rem;
-      color: var(--text-dim);
-      margin-top: 1rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-dim);
+      margin-top: 0.75rem;
     }
 
     .input-small {
       width: 100%;
       background: transparent;
       border: none;
-      border-bottom: 1px solid var(--track);
-      color: var(--text);
-      font: inherit;
+      border-bottom: 1.5px solid var(--hairline);
+      color: var(--ink);
+      font-family: var(--serif);
       font-size: 1.5rem;
-      font-weight: 300;
+      font-weight: 500;
       font-variant-numeric: tabular-nums;
-      padding: 0.25rem 0 0.5rem;
+      padding: 0.125rem 0 0.5rem;
       outline: none;
-      caret-color: var(--gold);
+      caret-color: var(--green);
+      border-radius: 0;
+      transition: border-color 0.25s ease;
     }
-    .input-small::placeholder { color: var(--text-dim); opacity: 0.4; }
-    .input-small:focus { border-bottom-color: var(--gold); }
+    .input-small::placeholder { color: var(--ink-dim); opacity: 0.4; font-size: 1.125rem; }
+    .input-small:focus { border-bottom-color: var(--green); }
 
     .error {
       font-size: 0.8125rem;
-      color: var(--red);
+      color: var(--behind);
       min-height: 1.25rem;
-      margin-top: -0.75rem;
+      margin-top: -0.5rem;
     }
 
     /* ── Buttons ───────────────────────────────────────────────────────── */
     .btn-primary {
       width: 100%;
       margin-top: auto;
-      padding: 1rem 1.5rem;
-      background: var(--text);
-      color: var(--ink);
+      padding: 1.0625rem 1.5rem;
+      background: var(--green);
+      color: #FCFAF5;
       border: none;
-      border-radius: 2px;
+      border-radius: 999px;
       font: inherit;
-      font-size: 1rem;
-      font-weight: 500;
-      letter-spacing: 0.04em;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 6px 18px rgba(29, 107, 76, 0.22),
+                  0 1px 3px rgba(29, 107, 76, 0.18);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
     }
-    .btn-primary:active { opacity: 0.85; }
+    .btn-primary:active {
+      background: var(--green-deep);
+      transform: translateY(1px);
+      box-shadow: 0 2px 8px rgba(29, 107, 76, 0.2);
+    }
     .btn-primary:disabled { opacity: 0.35; cursor: default; }
 
     .btn-ghost {
       background: none;
       border: none;
-      color: var(--text-dim);
+      color: var(--ink-dim);
       font: inherit;
       font-size: 0.8125rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
       cursor: pointer;
-      padding: 0.5rem;
+      padding: 0.625rem;
       -webkit-tap-highlight-color: transparent;
     }
-    .btn-ghost:active { color: var(--text); }
+    .btn-ghost:active { color: var(--ink); }
+
+    .btn-danger {
+      width: 100%;
+      padding: 1rem 1.5rem;
+      background: transparent;
+      border: 1.5px solid var(--behind);
+      color: var(--behind);
+      border-radius: 999px;
+      font: inherit;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-danger:active { background: rgba(188, 74, 46, 0.08); }
 
     .footer-link {
       text-align: center;
-      margin-top: 1.5rem;
+      margin-top: 1rem;
     }
 
     /* ── Result screen ─────────────────────────────────────────────────── */
     .figures {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 2rem;
-      margin-bottom: 2.5rem;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .figure {
+      background: #FFFEFB;
+      border: 1px solid var(--hairline);
+      border-radius: 14px;
+      padding: 0.875rem 1rem 1rem;
+      box-shadow: 0 2px 10px rgba(34, 50, 42, 0.05);
     }
 
     .figure-label {
-      font-size: 0.75rem;
+      font-size: 0.6875rem;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--text-dim);
-      margin-bottom: 0.35rem;
+      letter-spacing: 0.14em;
+      color: var(--ink-dim);
+      margin-bottom: 0.375rem;
     }
 
     .figure-value {
-      font-size: clamp(1.25rem, 5vw, 1.5rem);
-      font-weight: 300;
+      font-family: var(--serif);
+      font-size: clamp(1.25rem, 5.5vw, 1.5rem);
+      font-weight: 500;
       font-variant-numeric: tabular-nums;
     }
 
@@ -205,39 +282,40 @@
 
     .delta-block {
       text-align: center;
-      margin-bottom: 2.5rem;
+      margin-bottom: 2rem;
     }
 
     .delta-value {
-      font-size: clamp(2.25rem, 11vw, 3.5rem);
-      font-weight: 200;
+      font-family: var(--serif);
+      font-size: clamp(2rem, 10vw, 3rem);
+      font-weight: 500;
       font-variant-numeric: tabular-nums;
-      letter-spacing: -0.02em;
-      line-height: 1.1;
+      letter-spacing: -0.015em;
+      line-height: 1.15;
     }
-    .delta-value.ahead { color: var(--green); }
-    .delta-value.behind { color: var(--red); }
-    .delta-value.even { color: var(--text-dim); }
+    .delta-value.ahead { color: var(--ahead); }
+    .delta-value.behind { color: var(--behind); }
+    .delta-value.even { color: var(--ink-dim); }
 
     /* Progress track */
     .track-wrap {
-      margin-bottom: 2.5rem;
+      margin-bottom: 2rem;
       padding: 0 0.25rem;
     }
 
     .track {
       position: relative;
-      height: 2px;
-      background: var(--track);
-      border-radius: 1px;
-      margin: 1.75rem 0;
+      height: 3px;
+      background: var(--hairline);
+      border-radius: 2px;
+      margin: 1.5rem 0 1rem;
     }
 
     .track-tick {
       position: absolute;
       top: 50%;
       width: 2px;
-      height: 14px;
+      height: 16px;
       background: var(--gold);
       transform: translate(-50%, -50%);
       border-radius: 1px;
@@ -246,9 +324,11 @@
     .track-dot {
       position: absolute;
       top: 50%;
-      width: 10px;
-      height: 10px;
-      background: var(--text);
+      width: 12px;
+      height: 12px;
+      background: var(--green);
+      border: 2.5px solid #FFFEFB;
+      box-shadow: 0 1px 4px rgba(34, 50, 42, 0.3);
       border-radius: 50%;
       transform: translate(-50%, -50%) scale(0);
       transition: left 0.9s cubic-bezier(0.22, 1, 0.36, 1),
@@ -262,26 +342,29 @@
       display: flex;
       justify-content: space-between;
       font-size: 0.6875rem;
-      color: var(--text-dim);
-      letter-spacing: 0.06em;
+      font-weight: 600;
+      color: var(--ink-dim);
+      letter-spacing: 0.1em;
       text-transform: uppercase;
     }
 
-    /* History */
+    /* History — ruled ledger rows */
     .history-title {
       font-size: 0.6875rem;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--text-dim);
-      margin-bottom: 0.75rem;
+      letter-spacing: 0.14em;
+      color: var(--ink-dim);
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--hairline);
     }
 
     .history-list {
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
-      max-height: 28vh;
+      max-height: 26vh;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
     }
@@ -290,76 +373,61 @@
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      font-size: 0.8125rem;
+      font-size: 0.875rem;
       font-variant-numeric: tabular-nums;
-      padding: 0.35rem 0;
-      border-bottom: 1px solid rgba(42, 46, 56, 0.6);
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--hairline);
     }
 
-    .history-date { color: var(--text-dim); }
-    .history-delta.ahead { color: var(--green); }
-    .history-delta.behind { color: var(--red); }
-    .history-delta.even { color: var(--text-dim); }
+    .history-date { color: var(--ink-dim); }
+    .history-delta { font-family: var(--serif); font-weight: 500; }
+    .history-delta.ahead { color: var(--ahead); }
+    .history-delta.behind { color: var(--behind); }
+    .history-delta.even { color: var(--ink-dim); }
 
     .result-actions {
       margin-top: auto;
+      padding-top: 1.25rem;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.375rem;
       align-items: center;
     }
+    .result-actions .btn-primary { margin-top: 0; }
 
     /* ── Settings ────────────────────────────────────────────────────── */
-    .settings-group {
-      margin-bottom: 2rem;
+    .settings-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
-    .settings-label {
-      font-size: 0.875rem;
-      color: var(--text-dim);
-      margin-bottom: 0.75rem;
-    }
-
-    .input-percent {
-      width: 100%;
-      background: transparent;
-      border: none;
-      border-bottom: 1px solid var(--track);
-      color: var(--text);
-      font: inherit;
-      font-size: 2rem;
-      font-weight: 300;
-      font-variant-numeric: tabular-nums;
-      padding: 0.25rem 0 0.5rem;
-      outline: none;
-      caret-color: var(--gold);
-    }
-    .input-percent:focus { border-bottom-color: var(--gold); }
-
-    .btn-danger {
-      width: 100%;
-      padding: 0.875rem;
-      background: transparent;
-      border: 1px solid var(--red);
-      color: var(--red);
-      border-radius: 2px;
-      font: inherit;
-      font-size: 0.875rem;
-      cursor: pointer;
-      margin-top: 2rem;
-    }
-    .btn-danger:active { background: rgba(212, 101, 90, 0.1); }
-
-    .settings-back {
+    .settings-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
       margin-top: auto;
+    }
+    .settings-actions .btn-primary { margin-top: 0; }
+
+    /* Reset confirm */
+    .confirm-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
       text-align: center;
     }
+    .confirm-body .question { margin: 0 auto 0.75rem; }
+    .confirm-body .hint { margin: 0 auto; }
   </style>
 </head>
 <body>
 
-  <!-- ── Setup: initial value ──────────────────────────────────────────── -->
+  <!-- ── Setup: initial value — 1 question, 1 button ───────────────────── -->
   <section id="screen-setup-a" class="screen active" aria-label="Initial setup">
+    <header class="masthead">Net Worth</header>
     <p class="question">What's your asset value today?</p>
     <div class="input-wrap">
       <input
@@ -378,8 +446,9 @@
     <button type="button" class="btn-primary" id="btn-setup-a">Continue</button>
   </section>
 
-  <!-- ── Setup: growth rate ────────────────────────────────────────────── -->
+  <!-- ── Setup: growth rate — 1 question, 1 button ─────────────────────── -->
   <section id="screen-setup-b" class="screen" aria-label="Growth goal">
+    <header class="masthead">Net Worth</header>
     <p class="question">What's your growth goal per year?</p>
     <div class="input-wrap">
       <input
@@ -398,8 +467,9 @@
     <button type="button" class="btn-primary" id="btn-start">Start</button>
   </section>
 
-  <!-- ── Check-in ──────────────────────────────────────────────────────── -->
+  <!-- ── Check-in — 2 questions, 2 buttons ─────────────────────────────── -->
   <section id="screen-checkin" class="screen" aria-label="Check-in">
+    <header class="masthead">Net Worth</header>
     <p class="question">What's your value today?</p>
     <div class="input-wrap">
       <input
@@ -413,7 +483,7 @@
         placeholder="$0"
         aria-label="Current value"
       >
-      <p class="input-small-label">New contributions since last time?</p>
+      <p class="input-small-label">New contributions since last time</p>
       <input
         type="text"
         id="input-contribution"
@@ -433,14 +503,16 @@
     </div>
   </section>
 
-  <!-- ── Result ────────────────────────────────────────────────────────── -->
+  <!-- ── Result — 0 questions, 2 buttons ───────────────────────────────── -->
   <section id="screen-result" class="screen" aria-label="Result">
+    <header class="masthead">Net Worth</header>
+
     <div class="figures">
-      <div>
+      <div class="figure">
         <p class="figure-label">Goal</p>
         <p class="figure-value goal" id="result-goal">—</p>
       </div>
-      <div>
+      <div class="figure">
         <p class="figure-label">Actual</p>
         <p class="figure-value" id="result-actual">—</p>
       </div>
@@ -470,16 +542,15 @@
     </div>
   </section>
 
-  <!-- ── Settings ──────────────────────────────────────────────────────── -->
+  <!-- ── Settings — 1 question, 2 buttons ──────────────────────────────── -->
   <section id="screen-settings" class="screen" aria-label="Settings">
-    <p class="question">Settings</p>
-
-    <div class="settings-group">
-      <p class="settings-label">Annual growth goal</p>
+    <header class="masthead">Net Worth</header>
+    <p class="question">Your growth goal per year</p>
+    <div class="settings-body">
       <input
         type="text"
         id="input-settings-rate"
-        class="input-percent"
+        class="input-large"
         inputmode="decimal"
         autocomplete="off"
         autocorrect="off"
@@ -488,27 +559,51 @@
       >
       <p class="error" id="error-settings" role="alert"></p>
     </div>
-
-    <button type="button" class="btn-primary" id="btn-save-settings">Save</button>
-    <button type="button" class="btn-danger" id="btn-reset">Reset everything</button>
-
-    <div class="settings-back">
-      <button type="button" class="btn-ghost" id="btn-settings-back">Back</button>
+    <div class="settings-actions">
+      <button type="button" class="btn-primary" id="btn-save-settings">Save &amp; close</button>
+      <button type="button" class="btn-danger" id="btn-reset">Reset everything</button>
     </div>
   </section>
 
+  <!-- ── Reset confirm — 0 questions, 2 buttons ────────────────────────── -->
+  <section id="screen-confirm-reset" class="screen" aria-label="Confirm reset">
+    <header class="masthead">Net Worth</header>
+    <div class="confirm-body">
+      <p class="question">Erase everything?</p>
+      <p class="hint">Your goal and full history will be permanently deleted from this device.</p>
+    </div>
+    <div class="settings-actions">
+      <button type="button" class="btn-danger" id="btn-confirm-reset">Yes, erase it all</button>
+      <button type="button" class="btn-primary" id="btn-cancel-reset">Keep my data</button>
+    </div>
+  </section>
+
+  <script src="logic.js"></script>
   <script>
     /* ══════════════════════════════════════════════════════════════════════
-       CONFIG — bump SW version in sw.js when you ship asset changes
+       App shell — DOM, storage, and navigation.
+       All math/parsing/formatting lives in logic.js (tested via `npm test`).
+       Bump SW version in sw.js when you ship asset changes.
        ══════════════════════════════════════════════════════════════════════ */
-    const STORAGE_KEY = 'networthTracker';
-    const MS_PER_YEAR = 365.25 * 24 * 60 * 60 * 1000;
+    const {
+      usd,
+      parseMoney,
+      parseOptionalMoney,
+      isMoneyEmpty,
+      parsePercent,
+      formatPercent,
+      calcGoal,
+      eventsAtTime,
+      calcDelta,
+      getLastCheckIn,
+      isSetupComplete,
+      addContributionEvent,
+      formatDelta,
+      formatHistoryDelta,
+      trackDotLeft,
+    } = NetWorth;
 
-    const usd = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0,
-    });
+    const STORAGE_KEY = 'networthTracker';
 
     const dateFmt = new Intl.DateTimeFormat('en-US', {
       month: 'short',
@@ -516,7 +611,7 @@
       year: 'numeric',
     });
 
-    /* ── Data layer ────────────────────────────────────────────────────── */
+    /* ── Storage ───────────────────────────────────────────────────────── */
 
     function loadData() {
       try {
@@ -532,101 +627,6 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
 
-    function isSetupComplete(data) {
-      return (
-        data &&
-        typeof data.growthRate === 'number' &&
-        Array.isArray(data.principalEvents) &&
-        data.principalEvents.length > 0
-      );
-    }
-
-    function getLastCheckIn(data) {
-      if (!data.checkIns || !data.checkIns.length) return null;
-      return data.checkIns.reduce((latest, ci) =>
-        ci.timestamp > latest.timestamp ? ci : latest
-      );
-    }
-
-    /* Goal = Σ amount × (1 + rate)^elapsedYears for each principal event */
-    function calcGoal(principalEvents, rate, atTimestamp) {
-      return principalEvents.reduce((sum, ev) => {
-        const years = (atTimestamp - ev.timestamp) / MS_PER_YEAR;
-        return sum + ev.amount * Math.pow(1 + rate, years);
-      }, 0);
-    }
-
-    function eventsAtTime(data, timestamp) {
-      return data.principalEvents.filter((e) => e.timestamp <= timestamp);
-    }
-
-    function calcDelta(checkIn, data) {
-      const goal = calcGoal(
-        eventsAtTime(data, checkIn.timestamp),
-        data.growthRate,
-        checkIn.timestamp
-      );
-      return checkIn.value - goal;
-    }
-
-    /* Rebuild principal events from check-ins (contributions add events) */
-    function addContributionEvent(data, amount, timestamp) {
-      if (amount !== 0 && !isNaN(amount)) {
-        data.principalEvents.push({ timestamp, amount });
-      }
-    }
-
-    /* ── Input parsing ─────────────────────────────────────────────────── */
-
-    function parseMoney(str) {
-      if (str == null || String(str).trim() === '') return NaN;
-      const cleaned = String(str)
-        .trim()
-        .replace(/\$/g, '')
-        .replace(/\u00A0/g, ' ')
-        .replace(/\s/g, '');
-
-      if (cleaned === '' || cleaned === '-') return NaN;
-
-      /* US-style 1,234,567.89 — commas are thousands separators */
-      if (/^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(cleaned)) {
-        const n = parseFloat(cleaned.replace(/,/g, ''));
-        return isNaN(n) ? NaN : n;
-      }
-
-      /* 1.234.567,89 or 1234,56 — periods thousands, comma decimal */
-      if (/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(cleaned)) {
-        const n = parseFloat(cleaned.replace(/\./g, '').replace(',', '.'));
-        return isNaN(n) ? NaN : n;
-      }
-
-      /* Plain number, optional single decimal separator */
-      const normalized = cleaned.replace(/,/g, '');
-      const n = parseFloat(normalized);
-      return isNaN(n) ? NaN : n;
-    }
-
-    function parseOptionalMoney(str) {
-      if (str == null || String(str).trim() === '') return 0;
-      return parseMoney(str);
-    }
-
-    function isMoneyEmpty(str) {
-      return str == null || String(str).trim() === '';
-    }
-
-    function parsePercent(str) {
-      if (str == null || String(str).trim() === '') return NaN;
-      const cleaned = String(str).replace(/[%\s,]/g, '');
-      const n = parseFloat(cleaned);
-      if (isNaN(n)) return NaN;
-      return n / 100;
-    }
-
-    function formatPercent(rate) {
-      return (rate * 100).toFixed(1).replace(/\.0$/, '') + '%';
-    }
-
     /* ── UI helpers ────────────────────────────────────────────────────── */
 
     const screens = {
@@ -635,6 +635,7 @@
       checkin: document.getElementById('screen-checkin'),
       result: document.getElementById('screen-result'),
       settings: document.getElementById('screen-settings'),
+      'confirm-reset': document.getElementById('screen-confirm-reset'),
     };
 
     let returnScreen = 'checkin';
@@ -678,22 +679,6 @@
       requestAnimationFrame(tick);
     }
 
-    function formatDelta(delta) {
-      const abs = Math.abs(Math.round(delta));
-      if (abs < 1) return 'On target';
-      const formatted = usd.format(abs);
-      if (delta > 0) return '+' + formatted + ' ahead';
-      return '−' + formatted + ' behind';
-    }
-
-    function formatHistoryDelta(delta) {
-      const abs = Math.abs(Math.round(delta));
-      if (abs < 1) return 'On target';
-      const formatted = usd.format(abs);
-      if (delta > 0) return '+' + formatted;
-      return '−' + formatted;
-    }
-
     /* ── Result rendering ──────────────────────────────────────────────── */
 
     function renderResult(data, checkIn) {
@@ -711,14 +696,12 @@
       const deltaEl = document.getElementById('result-delta');
       animateDelta(deltaEl, delta, 900);
 
-      /* Track: goal tick at center, dot offset by delta relative to span */
+      /* Track: goal tick at center, dot offset by delta */
       const tick = document.getElementById('track-tick');
       const dot = document.getElementById('track-dot');
       tick.style.left = '50%';
 
-      const span = Math.max(Math.abs(delta), goal * 0.05, 1000);
-      const offset = Math.max(-0.45, Math.min(0.45, (delta / span) * 0.45));
-      const dotLeft = 50 + offset * 100;
+      const dotLeft = trackDotLeft(delta, goal);
 
       dot.classList.remove('visible');
       dot.style.left = '50%';
@@ -729,7 +712,7 @@
         });
       });
 
-      /* History — newest first, skip rendering future-proof */
+      /* History — newest first */
       const list = document.getElementById('history-list');
       list.innerHTML = '';
       const sorted = [...data.checkIns].sort((a, b) => b.timestamp - a.timestamp);
@@ -902,10 +885,6 @@
       openSettings('result');
     });
 
-    document.getElementById('btn-settings-back').addEventListener('click', () => {
-      showScreen(returnScreen);
-    });
-
     document.getElementById('btn-save-settings').addEventListener('click', () => {
       clearErrors();
       const rate = parsePercent(document.getElementById('input-settings-rate').value);
@@ -922,15 +901,23 @@
       showScreen(returnScreen);
     });
 
+    /* Reset — dedicated confirm screen instead of a native dialog */
     document.getElementById('btn-reset').addEventListener('click', () => {
-      if (confirm('Reset everything? All history will be permanently deleted.')) {
-        localStorage.removeItem(STORAGE_KEY);
-        pendingInitialValue = null;
-        showScreen('setup-a');
-        document.getElementById('input-initial-value').value = '';
-        document.getElementById('input-growth-rate').value = '';
-        document.getElementById('input-initial-value').focus();
-      }
+      showScreen('confirm-reset');
+    });
+
+    document.getElementById('btn-cancel-reset').addEventListener('click', () => {
+      showScreen('settings');
+    });
+
+    document.getElementById('btn-confirm-reset').addEventListener('click', () => {
+      localStorage.removeItem(STORAGE_KEY);
+      pendingInitialValue = null;
+      returnScreen = 'checkin';
+      document.getElementById('input-initial-value').value = '';
+      document.getElementById('input-growth-rate').value = '';
+      showScreen('setup-a');
+      document.getElementById('input-initial-value').focus();
     });
 
     /* Enter key submits on input screens */
@@ -946,8 +933,11 @@
     document.getElementById('input-contribution').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') document.getElementById('btn-checkin').click();
     });
+    document.getElementById('input-settings-rate').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('btn-save-settings').click();
+    });
 
-    /* ── Service worker ──────────────────────────────────────────────────── */
+    /* ── Service worker ──────────────────────────────────────────────── */
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').catch(() => {});
